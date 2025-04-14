@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>UTM Link Builder</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; }
+    label { display: block; margin: 10px 0 5px; }
+    input, button { width: 100%; padding: 10px; font-size: 1em; margin-bottom: 10px; }
+    .link-box { border: 1px solid #ccc; padding: 10px; margin-top: 10px; background: #f9f9f9; }
+    .small-btn { margin-top: 5px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>DIY UTM Link Builder</h1>
+
+  <label>Base URL:</label>
+  <input type="text" id="base" placeholder="https://yourwebsite.com/page" />
+
+  <label>utm_source:</label>
+  <input type="text" id="source" placeholder="e.g. newsletter" />
+
+  <label>utm_medium:</label>
+  <input type="text" id="medium" placeholder="e.g. email" />
+
+  <label>utm_campaign:</label>
+  <input type="text" id="campaign" placeholder="e.g. april_sale" />
+
+  <label>utm_term (optional):</label>
+  <input type="text" id="term" placeholder="e.g. shoes" />
+
+  <label>utm_content (optional):</label>
+  <input type="text" id="content" placeholder="e.g. banner_ad_1" />
+
+  <button onclick="buildUTMLink()">Generate UTM Link</button>
+
+  <div id="output"></div>
+  <hr />
+
+  <h2>🔗 Saved UTM Links</h2>
+  <div id="history"></div>
+
+  <button onclick="downloadCSV()" class="small-btn">⬇️ Export to CSV</button>
+
+  <script>
+    function buildUTMLink() {
+      const base = document.getElementById("base").value.trim();
+      const params = new URLSearchParams();
+
+      const source = document.getElementById("source").value.trim();
+      const medium = document.getElementById("medium").value.trim();
+      const campaign = document.getElementById("campaign").value.trim();
+      const term = document.getElementById("term").value.trim();
+      const content = document.getElementById("content").value.trim();
+
+      if (source) params.append("utm_source", source);
+      if (medium) params.append("utm_medium", medium);
+      if (campaign) params.append("utm_campaign", campaign);
+      if (term) params.append("utm_term", term);
+      if (content) params.append("utm_content", content);
+
+      const sep = base.includes('?') ? '&' : '?';
+      const fullURL = base + sep + params.toString();
+
+      const utmObj = {
+        url: fullURL,
+        base,
+        source,
+        medium,
+        campaign,
+        term,
+        content,
+        date: new Date().toISOString()
+      };
+
+      saveToHistory(utmObj);
+
+      document.getElementById("output").innerHTML = `
+        <p>✅ UTM Link Created:</p>
+        <p><a href="${fullURL}" target="_blank">${fullURL}</a></p>
+      `;
+
+      renderHistory();
+    }
+
+    function saveToHistory(obj) {
+      const history = JSON.parse(localStorage.getItem("utmLinks") || "[]");
+      history.unshift(obj);
+      localStorage.setItem("utmLinks", JSON.stringify(history));
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem("utmLinks") || "[]");
+      const container = document.getElementById("history");
+      container.innerHTML = "";
+
+      if (history.length === 0) {
+        container.innerHTML = "<p>No links saved yet.</p>";
+        return;
+      }
+
+      history.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "link-box";
+        div.innerHTML = `
+          <strong><a href="${item.url}" target="_blank">${item.url}</a></strong><br/>
+          <small>Source: ${item.source}, Medium: ${item.medium}, Campaign: ${item.campaign}</small><br/>
+          <small>Created: ${new Date(item.date).toLocaleString()}</small><br/>
+          <button onclick="deleteLink(${index})" class="small-btn">🗑️ Delete</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function deleteLink(index) {
+      const history = JSON.parse(localStorage.getItem("utmLinks") || "[]");
+      history.splice(index, 1);
+      localStorage.setItem("utmLinks", JSON.stringify(history));
+      renderHistory();
+    }
+
+    function downloadCSV() {
+      const history = JSON.parse(localStorage.getItem("utmLinks") || "[]");
+      if (history.length === 0) {
+        alert("No links to export.");
+        return;
+      }
+
+      const csv = ["Date,Base URL,Source,Medium,Campaign,Term,Content,Full URL"];
+      history.forEach(link => {
+        csv.push(`"${link.date}","${link.base}","${link.source}","${link.medium}","${link.campaign}","${link.term}","${link.content}","${link.url}"`);
+      });
+
+      const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "utm-links.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Load saved links on page load
+    window.onload = renderHistory;
+  </script>
+</body>
+</html>
