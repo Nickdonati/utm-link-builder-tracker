@@ -12,6 +12,35 @@
   </style>
 </head>
 <body>
+<div id="auth-container">
+    <h2>Login or Sign Up</h2>
+    
+    <!-- Sign-Up Form -->
+    <div id="signup-form">
+        <input type="email" id="signup-email" placeholder="Email" />
+        <input type="password" id="signup-password" placeholder="Password" />
+        <button id="signup-btn">Sign Up</button>
+    </div>
+    
+    <!-- Sign-In Form -->
+    <div id="signin-form">
+        <input type="email" id="signin-email" placeholder="Email" />
+        <input type="password" id="signin-password" placeholder="Password" />
+        <button id="signin-btn">Sign In</button>
+    </div>
+    
+    <!-- Show login buttons -->
+    <button id="google-login">Sign in with Google</button>
+    </div>
+    
+    <!-- The app's main content will be hidden until logged in -->
+    <div id="app" style="display:none;">
+    <h2>Welcome to UTM Builder</h2>
+    
+    <!-- UTM Builder content here -->
+    <button onclick="logout()">🚪 Logout</button>
+    </div>
+      
   <h1>DIY UTM Link Builder</h1>
 
   <label>Base URL:</label>
@@ -151,5 +180,81 @@
     // Load saved links on page load
     window.onload = renderHistory;
   </script>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+  
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-6K-aXLEZafUlMg06w2TRUeFj0vNn9ds",
+      authDomain: "utm-builder-tracker.firebaseapp.com",
+      projectId: "utm-builder-tracker",
+      storageBucket: "utm-builder-tracker.firebasestorage.app",
+      messagingSenderId: "1422114403",
+      appId: "1:1422114403:web:be4a85e5985f373c8f0256",
+      measurementId: "G-CVW420LKY4"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+  <script>
+    const auth = firebase.auth();
+  
+    // Sign-Up Logic
+    document.getElementById("signup-btn").addEventListener("click", function () {
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
+  
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          console.log("Signed up as:", userCredential.user.email);
+        })
+        .catch(error => alert(error.message));
+    });
+  
+    // Sign-In Logic
+    document.getElementById("signin-btn").addEventListener("click", function () {
+      const email = document.getElementById("signin-email").value;
+      const password = document.getElementById("signin-password").value;
+  
+      auth.signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          console.log("Signed in as:", userCredential.user.email);
+        })
+        .catch(error => alert(error.message));
+    });
+  
+    // Google Login (optional)
+    document.getElementById("google-login").addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(alert);
+    });
+  
+    // Auth State Listener
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // User is signed in
+        document.getElementById("auth-container").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        console.log("Signed in as:", user.email);
+      } else {
+        // No user is signed in
+        document.getElementById("auth-container").style.display = "block";
+        document.getElementById("app").style.display = "none";
+      }
+    });
+  
+    // Logout
+    function logout() {
+      auth.signOut();
+    }
+  </script>
+  
 </body>
 </html>
