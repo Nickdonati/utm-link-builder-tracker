@@ -75,6 +75,13 @@
 
       saveToHistory(utmObj);
 
+      fetch('https://script.google.com/macros/s/AKfycbxReqJfn7wA0NdYP14lHjkXCKRw8ACNTkkvilvpucJGq0D3qSPmmG2DQXiWhrMoQvI/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(utmObj)
+    });
+
+
       document.getElementById("output").innerHTML = `
         <p>✅ UTM Link Created:</p>
         <p><a href="${fullURL}" target="_blank">${fullURL}</a></p>
